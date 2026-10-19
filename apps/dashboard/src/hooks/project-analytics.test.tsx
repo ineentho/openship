@@ -249,7 +249,7 @@ it("prevents an older resource poll from undoing an explicit refresh (#396)", as
 
 it("preserves full hourly intervals across midnight and sorts them chronologically", () => {
   const period = (from: string, to: string, requests: number) => ({
-    from, to, requests, uniqueVisitors: 0, bandwidthIn: 0, bandwidthOut: 0, avgResponseTimeMs: 0,
+    from, to, requests, pageRequests: requests, uniqueVisitors: null, bandwidthIn: 0, bandwidthOut: 0, avgResponseTimeMs: 0,
   });
   const periods = [
     period("2026-09-25T00:00:00Z", "2026-09-25T01:00:00Z", 7),

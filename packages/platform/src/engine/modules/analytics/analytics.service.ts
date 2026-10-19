@@ -184,7 +184,7 @@ export function buildHourlyPeriods(
     number,
     {
       requests: number;
-      uniqueVisitors: number;
+      pageRequests: number;
       bandwidthIn: number;
       bandwidthOut: number;
       responseTimeSeconds: number;
@@ -195,14 +195,14 @@ export function buildHourlyPeriods(
     const hourKey = Math.floor(bucket.minute / 60);
     const current = hourly.get(hourKey) ?? {
       requests: 0,
-      uniqueVisitors: 0,
+      pageRequests: 0,
       bandwidthIn: 0,
       bandwidthOut: 0,
       responseTimeSeconds: 0,
     };
 
     current.requests += bucket.requests;
-    current.uniqueVisitors += bucket.unique_requests;
+    current.pageRequests += bucket.unique_requests;
     current.bandwidthIn += bucket.bandwidth_in;
     current.bandwidthOut += bucket.bandwidth_out;
     current.responseTimeSeconds += bucket.response_time;
@@ -222,7 +222,14 @@ export function buildHourlyPeriods(
       from: hourStart.toISOString(),
       to: hourEnd.toISOString(),
       requests: current?.requests ?? 0,
-      uniqueVisitors: current?.uniqueVisitors ?? 0,
+      // What the edge's per-minute `:u` counter measures: non-static requests,
+      // not people. Same meaning as the summary's `pageRequests`.
+      pageRequests: current?.pageRequests ?? 0,
+      // Self-hosted visitors are deduped per DAY in the edge's salted hash set.
+      // Summing per-minute unique_requests measures page requests, not distinct
+      // visitors, and a day-level set cannot be decomposed into hours — so the
+      // honest answer for a period is "unknown", never a sum presented as people.
+      uniqueVisitors: null,
       bandwidthIn: current?.bandwidthIn ?? 0,
       bandwidthOut: current?.bandwidthOut ?? 0,
       avgResponseTimeMs: averageResponseTimeMs(
@@ -270,6 +277,13 @@ function buildCloudHourlyPeriods(
       from: new Date(Math.max(bucketStartMs, fromMs)).toISOString(),
       to: new Date(Math.min(bucketStartMs + 3_600_000, toMs)).toISOString(),
       requests: bucket?.requests ?? 0,
+      // Oblien exposes distinct visitors, not a non-static request count — the
+      // same 0-means-unknown convention the summary already uses.
+      pageRequests: 0,
+      // Distinct visitors per upstream bucket, summed. Exact for one domain in
+      // one bucket; an UPPER BOUND once several buckets/domains are merged, since
+      // a visitor seen in two of them is counted twice (the same limitation the
+      // summary documents).
       uniqueVisitors: bucket?.unique_visitors ?? 0,
       bandwidthIn: bucket?.bandwidth_in ?? 0,
       bandwidthOut: bucket?.bandwidth_out ?? 0,
@@ -400,7 +414,24 @@ export interface AnalyticsPeriod {
   /** Period end */
   to: string;
   requests: number;
-  uniqueVisitors: number;
+  /**
+   * Non-static ("page") requests in this period — NOT people.
+   *
+   * Same meaning as the summary's `pageRequests`: what the edge's per-minute
+   * `:u` counter actually measures.
+   */
+  pageRequests: number;
+  /**
+   * Distinct visitors in this period, or null when the source cannot dedup for
+   * it.
+   *
+   * Self-hosted is always null: the edge dedups visitors per DAY, and that set
+   * does not decompose into hours (its per-minute `unique_requests` counter
+   * measures page requests, not people — see `pageRequests`). Cloud reports
+   * per-bucket distinct visitors, so its periods carry a number — an upper bound
+   * when several buckets/domains are merged into one hour.
+   */
+  uniqueVisitors: number | null;
   bandwidthIn: number;
   bandwidthOut: number;
   avgResponseTimeMs: number;

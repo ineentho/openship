@@ -13,7 +13,7 @@ export const AnalyticsDomainSchema = Type.Object({ domain: Type.Optional(Type.St
 export const AnalyticsRangeSchema = Type.Object({ from: Type.Optional(dateInput), to: Type.Optional(dateInput), domain: Type.Optional(Type.String()) }, { additionalProperties: false });
 export const AnalyticsSummarySchema = Type.Object({ totalRequests: Type.Number(), pageRequests: Type.Number(), uniqueVisitors: nullableNumber, bandwidthIn: Type.Number(), bandwidthOut: Type.Number(), avgResponseTimeMs: Type.Number(), lastUpdated: nullableString });
 const pathCount = Type.Object({ path: Type.String(), count: Type.Number() });
-export const AnalyticsPeriodSchema = Type.Object({ from: Type.String(), to: Type.String(), requests: Type.Number(), uniqueVisitors: Type.Number(), bandwidthIn: Type.Number(), bandwidthOut: Type.Number(), avgResponseTimeMs: Type.Number(), topPaths: Type.Array(pathCount), trafficByHour: numbers });
+export const AnalyticsPeriodSchema = Type.Object({ from: Type.String(), to: Type.String(), requests: Type.Number(), pageRequests: Type.Number(), uniqueVisitors: nullableNumber, bandwidthIn: Type.Number(), bandwidthOut: Type.Number(), avgResponseTimeMs: Type.Number(), topPaths: Type.Array(pathCount), trafficByHour: numbers });
 export const ProjectGeoSchema = Type.Object({
   total: Type.Number(), countries: Type.Array(Type.Object({ code: Type.String(), count: Type.Number(), pct: Type.Number() })),
   visitorDays: Type.Number(), peakDayVisitors: Type.Number(), topPaths: Type.Array(pathCount), statuses: numbers,

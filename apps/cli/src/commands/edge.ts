@@ -1268,10 +1268,12 @@ async function runTraffic(opts: TrafficOpts): Promise<void> {
         periods.map((p) => ({
           from: p.from,
           requests: fmtInt(p.requests),
-          visitors: fmtInt(p.uniqueVisitors),
+          page: fmtInt(p.pageRequests),
+          // Null means the source cannot tell them apart — never print 0.
+          visitors: p.uniqueVisitors == null ? "—" : fmtInt(p.uniqueVisitors),
           out: fmtBytes(p.bandwidthOut),
         })),
-        ["from", "requests", "visitors", "out"],
+        ["from", "requests", "page", "visitors", "out"],
       );
     }
   } catch (e) {

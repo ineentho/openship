@@ -63,7 +63,13 @@ export interface AnalyticsPeriodResponse {
   from: string;
   to: string;
   requests: number;
-  uniqueVisitors: number;
+  /**
+   * Non-static ("page") requests — NOT people. Same meaning as the summary's
+   * `pageRequests` (0 when the source cannot tell them apart, as on Cloud).
+   */
+  pageRequests: number;
+  /** Distinct visitors. Null on self-hosted, which only dedups per day. */
+  uniqueVisitors: number | null;
   bandwidthIn: number;
   bandwidthOut: number;
   avgResponseTimeMs: number;
